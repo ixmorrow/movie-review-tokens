@@ -13,7 +13,6 @@ pub enum MovieInstruction {
     description: String
   },
   AddComment {
-    review: Pubkey,
     comment: String
   }
 }
@@ -27,7 +26,6 @@ struct MovieReviewPayload {
 
 #[derive(BorshDeserialize)]
 struct CommentPayload {
-    review: Pubkey,
     comment: String
 }
 
@@ -55,7 +53,6 @@ impl MovieInstruction {
             2 => {
                 let payload = CommentPayload::try_from_slice(rest).unwrap();
                 Self::AddComment {
-                    review: payload.review,
                     comment: payload.comment
                 }
             }

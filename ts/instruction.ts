@@ -121,13 +121,58 @@ export const addCommentIx = (
         })
 }
 
+export const updateReviewIx = (i: Buffer, feePayer: web3.PublicKey, movie: web3.PublicKey) => {
+    return new web3.TransactionInstruction({
+      keys: [
+        {
+            pubkey: feePayer,
+            isSigner: true,
+            isWritable: false,
+        },
+        {
+          pubkey: movie,
+          isSigner: false,
+          isWritable: true,
+        }
+      ],
+      data: i,
+      programId: program_id,
+    });
+  }
+
+export const REVIEW_IX_DATA_LAYOUT = borsh.struct([
+    borsh.u8("variant"),
+    borsh.str("title"),
+    borsh.u8("rating"),
+    borsh.str("description"),
+])
+
+export const COMMENT_IX_DATA_LAYOUT = borsh.struct([
+    borsh.u8("variant"),
+    borsh.str("comment")
+])
+
+
 const borshAccountSchema = borsh.struct([
     borsh.str('discriminator'),
     borsh.bool('initialized'),
     borsh.u8('counter'),
 ])
 
-export function deserialize(buffer: Buffer) {
+const borshSeedSchema = borsh.struct([
+    borsh.u32('counter')
+])
+
+export function deserialize(buffer?: Buffer) {
     const ReviewCommentCounter = borshAccountSchema.decode(buffer)
     return ReviewCommentCounter
+}
+
+export function serializeCounter(count: number) {
+    const buffer = Buffer.alloc(1000)
+    borshSeedSchema.encode({ counter: count }, buffer)
+
+    const instructionBuffer = buffer.slice(0, borshSeedSchema.getSpan(buffer))
+
+    return instructionBuffer
 }

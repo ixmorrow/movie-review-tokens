@@ -31,8 +31,8 @@ pub fn process_instruction(
         MovieInstruction::UpdateMovieReview { title, rating, description } => {
             update_movie_review(program_id, accounts, title, rating, description)
         },
-        MovieInstruction::AddComment { review, comment } => {
-            add_comment(program_id, accounts, review, comment)
+        MovieInstruction::AddComment { comment } => {
+            add_comment(program_id, accounts, comment)
         }
     }
 }
@@ -261,13 +261,9 @@ description: String
 pub fn add_comment(
     program_id: &Pubkey,
     accounts: &[AccountInfo],
-    review: Pubkey,
+    //review: Pubkey,
     comment: String
 ) -> ProgramResult {
-    msg!("Adding Comment...");
-    msg!("Review: {}", review);
-    msg!("Comment: {}", comment);
-
     let account_info_iter = &mut accounts.iter();
 
     let commenter = next_account_info(account_info_iter)?;
@@ -280,6 +276,10 @@ pub fn add_comment(
     let system_program = next_account_info(account_info_iter)?;
     let token_program = next_account_info(account_info_iter)?;
 
+    msg!("Adding Comment...");
+    msg!("Review: {}", pda_review.key);
+    msg!("Comment: {}", comment);
+
     let mut counter_data = try_from_slice_unchecked::<MovieCommentCounter>(&pda_counter.data.borrow()).unwrap();
 
     let comment_discriminator = "comment";
@@ -291,6 +291,7 @@ pub fn add_comment(
     let (pda, bump_seed) = Pubkey::find_program_address(&[pda_review.key.as_ref(), counter_data.counter.to_be_bytes().as_ref(),], program_id);
     if pda != *pda_comment.key {
         msg!("Invalid seeds for PDA");
+        msg!("Derive PDA {} does not equal PDA passed in {}", pda, *pda_comment.key);
         return Err(ReviewError::InvalidPDA.into())
     }
 
