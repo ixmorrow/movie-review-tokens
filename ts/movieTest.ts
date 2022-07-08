@@ -4,7 +4,7 @@ TOKEN_PROGRAM_ID, getOrCreateAssociatedTokenAccount } from '@solana/spl-token'
 import { Buffer } from "buffer";
 import * as borsh from "@project-serum/borsh";
 import { program_id, token_mint, mint_auth } from "./const";
-import { createReviewIx, addCommentIx, deserialize, serializeCounter, COMMENT_IX_DATA_LAYOUT, REVIEW_IX_DATA_LAYOUT, updateReviewIx } from "./instruction";
+import { createReviewIx, addCommentIx, deserialize, borshAccountSchema, COMMENT_IX_DATA_LAYOUT, REVIEW_IX_DATA_LAYOUT, updateReviewIx } from "./instruction";
 
 
 const RPC_ENDPOINT_URL = "https://api.devnet.solana.com";
@@ -118,58 +118,56 @@ async function commentOnReview(comment: string, review: web3.PublicKey){
 
     // fetch and deserialize data of comment counter account
     let account = await connection.getAccountInfo(comment_count_pda)
-    if (account != null) {
-        let commentData = deserialize(account.data)
-        //console.log(commentData)
-        let countBuff = serializeCounter(commentData.counter)
-        //console.log(countBuff)
-
-        // derive pda of address of where the comment will live
-        const comment_pda = (await web3.PublicKey.findProgramAddress(
-            [review.toBuffer(), countBuff],
-            program_id
-        ))[0]
-        console.log("Comment pda: ", comment_pda.toBase58())
-
-        const payload = {
-          variant: 2,
-          comment: comment
-        }
-        const msgBuffer = Buffer.alloc(1000);
-        COMMENT_IX_DATA_LAYOUT.encode(payload, msgBuffer);
-        const postIxData = msgBuffer.slice(0, COMMENT_IX_DATA_LAYOUT.getSpan(msgBuffer));
-
-        const ix = addCommentIx(
-          postIxData,
-          wallet.publicKey,
-          review,
-          comment_count_pda,
-          comment_pda,
-          userAddress,
-        )
-        tx.add(ix)
-
-        if ((await connection.getBalance(wallet.publicKey)) < 1.0) {
-          console.log("Requesting Airdrop of 2 SOL...");
-          await connection.requestAirdrop(wallet.publicKey, 2e9);
-          console.log("Airdrop received");
-        }
     
-  
-      let signers = [wallet];
-  
-      console.log("sending tx");
-      let txid = await web3.sendAndConfirmTransaction(connection, tx, signers, {
-        skipPreflight: true,
-        preflightCommitment: "confirmed"
-      });
-      console.log(`https://explorer.solana.com/tx/${txid}?cluster=devnet`);
+    let commentData = deserialize(account?.data)
+    console.log(commentData)
+
+    // derive pda of address of where the comment will live
+    const comment_pda = (await web3.PublicKey.findProgramAddress(
+        [review.toBuffer(), Buffer.from([commentData.counter])],
+        program_id
+    ))[0]
+    console.log("Comment pda: ", comment_pda.toBase58())
+
+    const payload = {
+      variant: 2,
+      comment: comment
     }
+    const msgBuffer = Buffer.alloc(1000);
+    COMMENT_IX_DATA_LAYOUT.encode(payload, msgBuffer);
+    const postIxData = msgBuffer.slice(0, COMMENT_IX_DATA_LAYOUT.getSpan(msgBuffer));
+
+    const ix = addCommentIx(
+      postIxData,
+      wallet.publicKey,
+      review,
+      comment_count_pda,
+      comment_pda,
+      userAddress,
+    )
+    tx.add(ix)
+
+    if ((await connection.getBalance(wallet.publicKey)) < 1.0) {
+      console.log("Requesting Airdrop of 2 SOL...");
+      await connection.requestAirdrop(wallet.publicKey, 2e9);
+      console.log("Airdrop received");
+    }
+
+
+  let signers = [wallet];
+
+  console.log("sending tx");
+  let txid = await web3.sendAndConfirmTransaction(connection, tx, signers, {
+    skipPreflight: true,
+    preflightCommitment: "confirmed"
+  });
+  console.log(`https://explorer.solana.com/tx/${txid}?cluster=devnet`);
+    
 }
 
 
-  createNewReview("Thor: Love and Thunder", 5, "Haven't seen it yet, but am excited", wallet)
-  //commentOnReview("bollocks", new web3.PublicKey("7BKNtkCMhNHyKJ369PTtAzBVWaZpU4R1svzrUyhH5j7z"))
+  //createNewReview("Thor: Love and Thunder", 5, "Haven't seen it yet, but am excited", wallet)
+  commentOnReview("I concur. The only thing better than LOTR is GOT, but that is a series...", new web3.PublicKey("7BKNtkCMhNHyKJ369PTtAzBVWaZpU4R1svzrUyhH5j7z"))
   
   // test review
   // https://explorer.solana.com/tx/4XCKaAernwDsi5rWpZh2G5Mo8dW41jKwkfzE1ardYqhA97UJoEWPbP8YXQLrPJTQ9UY4oSuqpZMZfiAD2iTnm2KW?cluster=devnet

@@ -153,7 +153,7 @@ export const COMMENT_IX_DATA_LAYOUT = borsh.struct([
 ])
 
 
-const borshAccountSchema = borsh.struct([
+export const borshAccountSchema = borsh.struct([
     borsh.str('discriminator'),
     borsh.bool('initialized'),
     borsh.u8('counter'),
