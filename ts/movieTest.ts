@@ -167,7 +167,7 @@ async function commentOnReview(comment: string, review: web3.PublicKey){
 
 
   //createNewReview("Thor: Love and Thunder", 5, "Haven't seen it yet, but am excited", wallet)
-  commentOnReview("I concur. The only thing better than LOTR is GOT, but that is a series...", new web3.PublicKey("7BKNtkCMhNHyKJ369PTtAzBVWaZpU4R1svzrUyhH5j7z"))
+  commentOnReview("test comment pt 5", new web3.PublicKey("7BKNtkCMhNHyKJ369PTtAzBVWaZpU4R1svzrUyhH5j7z"))
   
   // test review
   // https://explorer.solana.com/tx/4XCKaAernwDsi5rWpZh2G5Mo8dW41jKwkfzE1ardYqhA97UJoEWPbP8YXQLrPJTQ9UY4oSuqpZMZfiAD2iTnm2KW?cluster=devnet
