@@ -166,8 +166,10 @@ async function commentOnReview(comment: string, review: web3.PublicKey){
 }
 
 
-  //createNewReview("Thor: Love and Thunder", 5, "Haven't seen it yet, but am excited", wallet)
-  commentOnReview("test comment pt 5", new web3.PublicKey("7BKNtkCMhNHyKJ369PTtAzBVWaZpU4R1svzrUyhH5j7z"))
+  const everythingEverywhere = new web3.PublicKey("82vENaBCCuBXuowEas8jQu8TKqFutxB5JTs3KjTY8SYS")
+  const lotr = new web3.PublicKey("7BKNtkCMhNHyKJ369PTtAzBVWaZpU4R1svzrUyhH5j7z")
+  //createNewReview("Everything Everywhere", 5, "Was very impressed witht he uniqueness of this movie. Loved it.", wallet)
+  commentOnReview("this movie was trash", everythingEverywhere)
   
   // test review
   // https://explorer.solana.com/tx/4XCKaAernwDsi5rWpZh2G5Mo8dW41jKwkfzE1ardYqhA97UJoEWPbP8YXQLrPJTQ9UY4oSuqpZMZfiAD2iTnm2KW?cluster=devnet
