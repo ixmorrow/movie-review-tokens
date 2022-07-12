@@ -1,16 +1,17 @@
 import * as web3 from "@solana/web3.js"
-import { createAssociatedTokenAccountInstruction, getAssociatedTokenAddress, getMint,
-TOKEN_PROGRAM_ID, getOrCreateAssociatedTokenAccount } from '@solana/spl-token'
+import { TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import { Buffer } from "buffer";
 import * as borsh from "@project-serum/borsh";
-import { program_id, token_mint, mint_auth } from "./const";
 
 export const createReviewIx = (
     i: Buffer,
     feePayer: web3.PublicKey,
     movie: web3.PublicKey,
     comment: web3.PublicKey,
-    userATA: web3.PublicKey
+    tokenMint: web3.PublicKey,
+    mintAuth: web3.PublicKey,
+    userATA: web3.PublicKey,
+    programId: web3.PublicKey
     ) => {
     return new web3.TransactionInstruction({
       keys: [
@@ -30,12 +31,12 @@ export const createReviewIx = (
             isWritable: true,
         },
         {
-            pubkey: token_mint,
+            pubkey: tokenMint,
             isSigner: false,
             isWritable: true,
         },
         {
-            pubkey: mint_auth,
+            pubkey: mintAuth,
             isSigner: false,
             isWritable: false,
         },
@@ -56,7 +57,7 @@ export const createReviewIx = (
         },
       ],
       data: i,
-      programId: program_id,
+      programId: programId,
     });
 };
 
@@ -66,7 +67,10 @@ export const addCommentIx = (
     pdaReview: web3.PublicKey,
     pdaCounter: web3.PublicKey,
     pdaComment: web3.PublicKey,
-    userATA: web3.PublicKey
+    tokenMint: web3.PublicKey,
+    mintAuth: web3.PublicKey,
+    userATA: web3.PublicKey,
+    programId: web3.PublicKey
     ) => {
         return new web3.TransactionInstruction({
             keys: [
@@ -91,12 +95,12 @@ export const addCommentIx = (
                     isWritable: true,
                 },
                 {
-                    pubkey: token_mint,
+                    pubkey: tokenMint,
                     isSigner: false,
                     isWritable: true,
                 },
                 {
-                    pubkey: mint_auth,
+                    pubkey: mintAuth,
                     isSigner: false,
                     isWritable: false,
                 },
@@ -117,11 +121,11 @@ export const addCommentIx = (
                 },
               ],
               data: i,
-              programId: program_id,
+              programId: programId,
         })
 }
 
-export const updateReviewIx = (i: Buffer, feePayer: web3.PublicKey, movie: web3.PublicKey) => {
+export const updateReviewIx = (i: Buffer, feePayer: web3.PublicKey, movie: web3.PublicKey, programId: web3.PublicKey) => {
     return new web3.TransactionInstruction({
       keys: [
         {
@@ -136,7 +140,7 @@ export const updateReviewIx = (i: Buffer, feePayer: web3.PublicKey, movie: web3.
         }
       ],
       data: i,
-      programId: program_id,
+      programId: programId,
     });
   }
 
@@ -154,8 +158,6 @@ export const COMMENT_IX_DATA_LAYOUT = borsh.struct([
 
 
 export const borshAccountSchema = borsh.struct([
-    borsh.str('discriminator'),
-    borsh.bool('initialized'),
     borsh.u8('counter'),
 ])
 
