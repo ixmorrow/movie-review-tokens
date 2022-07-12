@@ -1,7 +1,7 @@
 import * as web3 from "@solana/web3.js"
 import { commentOnReview, createNewReview } from "./index";
 
-
+// Using devnet cluster
 const RPC_ENDPOINT_URL = "https://api.devnet.solana.com";
 const commitment = 'confirmed';
 const connection = new web3.Connection(RPC_ENDPOINT_URL, commitment);
@@ -33,4 +33,4 @@ async function testMovieReviewProgram(title: string, rating: number, description
   You need to either change the path to your wallet or generate a new keypair.
   The script will fund whatever keypair you pass in it it doesn't have enough SOL.
 */
-testMovieReviewProgram("test movie 4", 5, "this happened to my buddy eric.", "still trash", wallet, program_id)
+testMovieReviewProgram("test movie 5", 5, "this happened to my buddy eric.", "still trash", wallet, program_id)
