@@ -386,3 +386,138 @@ pub fn add_comment(
     
     Ok(())
 }
+
+ 
+
+#[cfg(test)]
+mod tests {
+    use {
+        super::*,
+        assert_matches::*,
+        solana_program::{
+            instruction::{AccountMeta, Instruction},
+            system_program::ID as SYSTEM_PROGRAM_ID,
+            program_pack::Pack
+        },
+        solana_program_test::*,
+        solana_sdk::{signature::Signer, signer::keypair::Keypair, transaction::Transaction, client::SyncClient, system_instruction::create_account},
+        spl_token::{instruction::initialize_mint, ID as TOKEN_PROGRAM_ID, state::Mint},
+        spl_associated_token_account::{ID as ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID,
+            get_associated_token_address,
+            instruction::{AssociatedTokenAccountInstruction, create_associated_token_account}},
+    };
+ 
+    // first unit test
+    #[tokio::test]
+    async fn it_works() {
+        let program_id = Pubkey::new_unique();
+ 
+        let (mut banks_client, payer, recent_blockhash) = ProgramTest::new(
+            "bpf_program_template",
+            program_id,
+            processor!(process_instruction),
+        )
+        .start()
+        .await;
+
+        // derive pda for token mint authority
+        let (mint_auth, _bump_seed) = Pubkey::find_program_address(
+            &[b"tokens"],
+            &program_id,
+        );
+
+        // create mint account
+        let mint_keypair = Keypair::new();
+        let rent = banks_client.get_rent().await.unwrap();
+        let mint_rent = rent.minimum_balance(Mint::LEN);
+        let create_mint_acct_ix = create_account(
+            &payer.pubkey(),
+            &mint_keypair.pubkey(),
+            mint_rent,
+            Mint::LEN.try_into().unwrap(),
+            &mint_auth
+        );
+        // create initialize mint instruction
+        let init_mint_ix = initialize_mint(
+            &TOKEN_PROGRAM_ID,
+            &mint_keypair.pubkey(),
+            &mint_auth,
+            Some(&mint_auth),
+            9
+        ).unwrap();
+
+        // create review pda
+        let title: String = "Captain America".to_owned();
+        const rating: u8 = 3;
+        let review: String  = "Liked the movie".to_owned();
+        let (review_pda, _bump_seed) = Pubkey::find_program_address(
+            &[payer.pubkey().as_ref(), title.as_bytes()],
+            &program_id,
+        );
+
+        // create comment pda
+        let (comment_pda, _bump_seed) = Pubkey::find_program_address(
+            &[review_pda.as_ref(), b"comment"],
+            &program_id,
+        );
+
+        // create user associate token account of token mint
+        let wallet_address = Pubkey::new_unique();
+        let init_ata_ix: Instruction = create_associated_token_account(
+            &payer.pubkey(),
+            &wallet_address,
+            &mint_keypair.pubkey()
+        );
+
+        let user_ata: Pubkey = get_associated_token_address(&wallet_address, &mint_keypair.pubkey());
+        // let init_ata_ix = Instruction {
+        //     program_id: ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID,
+        //     accounts: vec![
+        //         AccountMeta::new(payer.pubkey(), true),
+        //         AccountMeta::new(user_ata, false),
+        //         AccountMeta::new_readonly(wallet_address, false),
+        //         AccountMeta::new_readonly(mint_keypair.pubkey(), true),
+        //         AccountMeta::new_readonly(SYSTEM_PROGRAM_ID, false),
+        //         AccountMeta::new_readonly(ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID, false)
+        //     ],
+        //     data: vec![0]
+        // };
+
+
+
+        // concat data to single buffer
+        let mut data_vec = vec![0];
+        data_vec.append(&mut title.into_bytes());
+        data_vec.push(rating);
+        data_vec.append(&mut review.into_bytes());
+
+
+        // create transaction object with instructions, accounts, and input data
+        let mut transaction = Transaction::new_with_payer(
+            &[
+                create_mint_acct_ix,
+                init_mint_ix,
+                init_ata_ix,
+                Instruction {
+                    program_id: program_id,
+                    accounts: vec![
+                        AccountMeta::new_readonly(payer.pubkey(), true),
+                        AccountMeta::new(review_pda, false),
+                        AccountMeta::new(comment_pda, false),
+                        AccountMeta::new(mint_keypair.pubkey(), false),
+                        AccountMeta::new_readonly(mint_auth, false),
+                        AccountMeta::new(user_ata, false),
+                        AccountMeta::new_readonly(SYSTEM_PROGRAM_ID, false),
+                        AccountMeta::new_readonly(TOKEN_PROGRAM_ID, false)
+                    ],
+                    //data: vec![0, title, rating, review],
+                    data: data_vec,
+                }],
+                Some(&payer.pubkey()),
+        );
+        transaction.sign(&[&payer, &mint_keypair], recent_blockhash);
+
+        // process transaction and compare the result
+        assert_matches!(banks_client.process_transaction(transaction).await, Ok(_));
+    }
+}
