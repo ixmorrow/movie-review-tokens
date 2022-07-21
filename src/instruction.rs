@@ -1,5 +1,5 @@
 use borsh::{BorshDeserialize};
-use solana_program::{program_error::ProgramError, pubkey::Pubkey};
+use solana_program::{program_error::ProgramError};
 
 pub enum MovieInstruction {
   AddMovieReview {

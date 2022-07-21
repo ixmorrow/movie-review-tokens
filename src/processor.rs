@@ -210,7 +210,7 @@ pub fn add_movie_review(
 pub fn update_movie_review(
     program_id: &Pubkey,
     accounts: &[AccountInfo],
-    title: String,
+    _title: String,
     rating: u8,
     description: String,
 ) -> ProgramResult {
@@ -396,13 +396,12 @@ mod tests {
         },
         solana_program_test::*,
         solana_sdk::{
-            client::SyncClient, signature::Signer, signer::keypair::Keypair,
+            signature::Signer, signer::keypair::Keypair,
             system_instruction::create_account, transaction::Transaction,
         },
         spl_associated_token_account::{
             get_associated_token_address,
-            instruction::{create_associated_token_account, AssociatedTokenAccountInstruction},
-            ID as ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID,
+            instruction::create_associated_token_account,
         },
         spl_token::{instruction::initialize_mint, state::Mint, ID as TOKEN_PROGRAM_ID},
     };
@@ -444,7 +443,7 @@ mod tests {
 
         // create review pda
         let title: String = "Captain America".to_owned();
-        const rating: u8 = 3;
+        const RATING: u8 = 3;
         let review: String = "Liked the movie".to_owned();
         let (review_pda, _bump_seed) =
             Pubkey::find_program_address(&[payer.pubkey().as_ref(), title.as_bytes()], &program_id);
@@ -460,19 +459,8 @@ mod tests {
             &mint_keypair.pubkey(),
         );
 
-        let user_ata: Pubkey = get_associated_token_address(&wallet_address, &mint_keypair.pubkey());
-        let init_ata_ix = Instruction {
-            program_id: ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID,
-            accounts: vec![
-                AccountMeta::new(payer.pubkey(), true),
-                AccountMeta::new(user_ata, false),
-                AccountMeta::new_readonly(wallet_address, false),
-                AccountMeta::new_readonly(mint_keypair.pubkey(), true),
-                AccountMeta::new_readonly(SYSTEM_PROGRAM_ID, false),
-                AccountMeta::new_readonly(ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID, false)
-            ],
-            data: vec![0]
-        };
+        let user_ata: Pubkey =
+            get_associated_token_address(&payer.pubkey(), &mint_keypair.pubkey());
 
         // concat data to single buffer
         let mut data_vec = vec![0];
@@ -482,7 +470,7 @@ mod tests {
                 .unwrap(),
         );
         data_vec.append(&mut title.into_bytes());
-        data_vec.push(rating);
+        data_vec.push(RATING);
         data_vec.append(
             &mut (TryInto::<u32>::try_into(review.len())
                 .unwrap()
@@ -510,7 +498,6 @@ mod tests {
                         AccountMeta::new_readonly(SYSTEM_PROGRAM_ID, false),
                         AccountMeta::new_readonly(TOKEN_PROGRAM_ID, false),
                     ],
-                    //data: vec![0, title, rating, review],
                     data: data_vec,
                 },
             ],
