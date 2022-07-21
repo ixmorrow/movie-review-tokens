@@ -6,7 +6,7 @@ license = "WTFPL"
 publish = false
 
 [dependencies]
-solana-program = "=1.11.1"
+solana-program = "~1.10.29"
 borsh = "=0.9.3"
 thiserror = "=1.0.31"
 spl-token = { version="3.2.0", features = [ "no-entrypoint" ] }
@@ -17,8 +17,8 @@ test-bpf = []
 
 [dev-dependencies]
 assert_matches = "1.4.0"
-solana-program-test = "=1.11.1"
-solana-sdk = "=1.11.1"
+solana-program-test = "~1.10.29"
+solana-sdk = "~1.10.29"
 
 [lib]
 crate-type = ["cdylib", "lib"]
