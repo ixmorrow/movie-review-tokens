@@ -470,18 +470,18 @@ mod tests {
         );
 
         let user_ata: Pubkey = get_associated_token_address(&wallet_address, &mint_keypair.pubkey());
-        // let init_ata_ix = Instruction {
-        //     program_id: ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID,
-        //     accounts: vec![
-        //         AccountMeta::new(payer.pubkey(), true),
-        //         AccountMeta::new(user_ata, false),
-        //         AccountMeta::new_readonly(wallet_address, false),
-        //         AccountMeta::new_readonly(mint_keypair.pubkey(), true),
-        //         AccountMeta::new_readonly(SYSTEM_PROGRAM_ID, false),
-        //         AccountMeta::new_readonly(ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID, false)
-        //     ],
-        //     data: vec![0]
-        // };
+        let init_ata_ix = Instruction {
+            program_id: ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID,
+            accounts: vec![
+                AccountMeta::new(payer.pubkey(), true),
+                AccountMeta::new(user_ata, false),
+                AccountMeta::new_readonly(wallet_address, false),
+                AccountMeta::new_readonly(mint_keypair.pubkey(), true),
+                AccountMeta::new_readonly(SYSTEM_PROGRAM_ID, false),
+                AccountMeta::new_readonly(ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID, false)
+            ],
+            data: vec![0]
+        };
 
 
 
